@@ -17,3 +17,6 @@
 
 #[cfg(feature = "sodiumoxide-crypto")]
 pub mod sodiumoxide;
+
+#[cfg(feature = "ring-crypto")]
+pub mod ring;

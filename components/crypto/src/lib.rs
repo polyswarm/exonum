@@ -52,6 +52,8 @@ use hex::{encode as encode_hex, FromHex, FromHexError, ToHex};
 // A way to set an active cryptographic backend is to export it as `crypto_impl`.
 #[cfg(feature = "sodiumoxide-crypto")]
 use self::crypto_lib::sodiumoxide as crypto_impl;
+#[cfg(feature = "ring-crypto")]
+use self::crypto_lib::ring as crypto_impl;
 
 #[macro_use]
 mod macros;

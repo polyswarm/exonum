@@ -247,7 +247,10 @@ impl HashStream {
     /// Returns the resulting hash of the system calculated upon the commit
     /// of currently supplied data.
     pub fn hash(self) -> Hash {
+        #[cfg(feature = "sodiumoxide-crypto")]
         let dig = self.0.finalize();
+        #[cfg(feature = "ring-crypto")]
+        let dig = self.0.finish();
         Hash(dig)
     }
 }
@@ -277,9 +280,11 @@ impl HashStream {
 /// let file_sign = create_stream.sign(&secret_key);
 /// assert!(verify_stream.verify(&file_sign, &public_key));
 /// ```
+#[cfg(feature = "sodiumoxide-crypto")]
 #[derive(Debug, Default)]
 pub struct SignStream(crypto_impl::SignState);
 
+#[cfg(feature = "sodiumoxide-crypto")]
 impl SignStream {
     /// Creates a new instance of `SignStream`.
     ///

@@ -52,9 +52,9 @@ pub use self::ed25519::State as SignState;
 
 /// Contains the state for multi-part (streaming) hash computations
 /// for sodiumoxide-based implementation.
-pub use self::sha256::State as HashState;
+pub use self::digest::Context as HashState;
 
-use self::ring::{digest, signature, ec, error};
+use self::ring::{digest, signature, ec, error, untrusted::Input};
 
 use failure::Error;
 
@@ -81,7 +81,7 @@ pub const EMPTY_SLICE_HASH: Hash = Hash::from([
 
 /// Empty spot for initing ring.
 pub fn init() -> bool {
-
+    true
 }
 
 /// Signs a slice of bytes using the signer's secret key and returns the
@@ -103,7 +103,7 @@ pub fn gen_keypair_from_seed(seed: &Seed) -> (PublicKey, SecretKey) {
 pub fn gen_keypair() -> (PublicKey, SecretKey) {
     let rng = rand::SystemRandom::new();
     let pkcs8 = SecretKey::generate_pkcs8(&signature::ECDSA_P256_SHA256_FIXED, &rng).unwrap();
-    let keypair = SecretKey::from_pcks8(&signature::ECDSA_P256_SHA256_FIXED, pkcs8);
+    let keypair = SecretKey::from_pcks8(&signature::ECDSA_P256_SHA256_FIXED, Input::from(pkcs8.as_ref());
     (keypair.public_key().clone(), keypair)
 }
 

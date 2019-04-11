@@ -244,13 +244,20 @@ impl HashStream {
         self
     }
 
+
     /// Returns the resulting hash of the system calculated upon the commit
     /// of currently supplied data.
+    #[cfg(feature = "ring-crypto")]
     pub fn hash(self) -> Hash {
-        #[cfg(feature = "sodiumoxide-crypto")]
-        let dig = self.0.finalize();
-        #[cfg(feature = "ring-crypto")]
         let dig = self.0.finish();
+        Hash(dig)
+    }
+
+    /// Returns the resulting hash of the system calculated upon the commit
+    /// of currently supplied data.
+    #[cfg(feature = "sodiumoxide-crypto")]
+    pub fn hash(self) -> Hash {
+        let dig = self.0.finalize();
         Hash(dig)
     }
 }

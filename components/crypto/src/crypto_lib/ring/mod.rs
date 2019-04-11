@@ -31,32 +31,37 @@
 
 use ring;
 
-/// Public key type for ring-based implementation.
-pub use self::digest::Digest as Hash;
+use untrusted::Input;
+
+pub use self::digest::Digest;
+
+pub use self::signature::Signature as RingSignature;
+
+pub use self::signature::EcdsaKeyPair;
+
+#[macro_use]
+pub mod macros;
+
+/// Seed type for not used in ring-base implementation.
+new_wrapper!(Seed; SEED_LENGTH);
 
 /// Public key type for ring-based implementation.
-pub use self::signature::Signature;
+new_wrapper!(PublicKey; PUBLIC_KEY_LENGTH);
 
-/// Public key type for ring-based implementation.
-pub use self::signature::EcdsaKeyPair as SecretKey;
+/// Secret key type for ring-based implementation.
+new_wrapper!(SecretKey; SECRET_KEY_LENGTH);
 
-/// Public key type for ring-based implementation.
-pub use self::ec::suite_b::ecdsa::signing::PublicKey;
+/// Signature type for ring-based implementation.
+new_wrapper!(Signature; SIGNATURE_LENGTH);
 
-/// Seed type for sodiumoxide-based implementation.
-pub use self::ed25519::Seed;
-
-/// State for multi-part (streaming) computation of signature for sodiumoxide-based
-/// implementation.
-pub use self::ed25519::State as SignState;
+/// Hash Digest type for ring-based implementation.
+new_wrapper!(Hash; SIGNATURE_LENGTH);
 
 /// Contains the state for multi-part (streaming) hash computations
 /// for sodiumoxide-based implementation.
 pub use self::digest::Context as HashState;
 
-use self::ring::{digest, signature, ec, error, untrusted::Input};
-
-use failure::Error;
+use self::ring::{digest, signature, rand};
 
 /// Number of bytes in a `Hash`.
 pub const HASH_SIZE: usize = digest::SHA256_OUTPUT_LEN;
@@ -68,13 +73,13 @@ pub const PUBLIC_KEY_LENGTH: usize = 65;
 pub const SECRET_KEY_LENGTH: usize = 65;
 
 /// Number of bytes in a seed.
-pub const SEED_LENGTH: usize = ed25519::SEEDBYTES;
+pub const SEED_LENGTH: usize = 32;
 
 /// Number of bytes in a signature.
 pub const SIGNATURE_LENGTH: usize = digest::SHA256_OUTPUT_LEN;
 
 /// Hash of an empty slice.
-pub const EMPTY_SLICE_HASH: Hash = Hash::from([
+pub const EMPTY_SLICE_HASH: Hash = Hash([
     227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65, 228,
     100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85,
 ]);
@@ -88,8 +93,8 @@ pub fn init() -> bool {
 /// resulting `Signature`.
 pub fn sign(data: &[u8], secret_key: &SecretKey) -> Signature {
     let rng = rand::SystemRandom::new();
-    let mut signature = vec![0; secret_key.public_modulus_len()];
-    secret_key.sign(&signature::ECDSA_P256_SHA256_FIXED_SIGNING, &rng, data, &mut signature).unwrap()
+    let keypair = EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P256_SHA256_FIXED_SIGNING, Input::from(secret_key.as_ref())).unwrap()
+    Signature::from_slice(keypair.sign(&rng, Input::from(data)).as_ref()).unwrap()
 }
 
 /// Computes a secret key and a corresponding public key from a `Seed`.
@@ -102,18 +107,22 @@ pub fn gen_keypair_from_seed(seed: &Seed) -> (PublicKey, SecretKey) {
 /// pseudo-random number generator.
 pub fn gen_keypair() -> (PublicKey, SecretKey) {
     let rng = rand::SystemRandom::new();
-    let pkcs8 = SecretKey::generate_pkcs8(&signature::ECDSA_P256_SHA256_FIXED, &rng).unwrap();
-    let keypair = SecretKey::from_pcks8(&signature::ECDSA_P256_SHA256_FIXED, Input::from(pkcs8.as_ref());
-    (keypair.public_key().clone(), keypair)
+    let pkcs8 = EcdsaKeyPair::generate_pkcs8(&signature::ECDSA_P256_SHA256_FIXED_SIGNING, &rng).unwrap();
+    let keypair = EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P256_SHA256_FIXED_SIGNING, Input::from(pkcs8.as_ref())).unwrap();
+    (PublicKey::from_slice(signature::KeyPair::public_key(&keypair).as_ref()).unwrap(), SecretKey::from_slice(keypair.as_ref()).unwrap())
 }
 
 /// Verifies that `data` is signed with a secret key corresponding to the
 /// given public key.
 pub fn verify(sig: &Signature, data: &[u8], pub_key: &PublicKey) -> bool {
-    signature::verify(&signature::ECDSA_P256_SHA256_FIXED, pub_key, data, sig)
+    match signature::verify(&signature::ECDSA_P256_SHA256_FIXED, Input::from(pub_key.as_ref()), Input::from(data), Input::from(sig.as_ref())) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
 }
 
 /// Calculates hash of a bytes slice.
 pub fn hash(data: &[u8]) -> Hash {
-    digest::digest(&digest::SHA_256, data)
+    Hash::from_slice(digest::digest(&digest::SHA256, data).as_ref()).unwrap()
 }
+

@@ -29,49 +29,28 @@
 
 // spell-checker:ignore DIGESTBYTES, PUBLICKEYBYTES, SECRETKEYBYTES, SEEDBYTES, SIGNATUREBYTES
 
-use secpk256k1;
+use rand::OsRng;
 
 /// Digest type for sodiumoxide-based implementation.
-pub use secpk256k1::sha256::Digest as Hash;
-
-/// Signature type for sodiumoxide-based implementation.
-pub use secpk256k1::ed25519::Signature;
-
-/// Secret key type for sodiumoxide-based implementation.
-pub use secpk256k1::ed25519::SecretKey;
-
-/// Public key type for sodiumoxide-based implementation.
-pub use secpk256k1::ed25519::PublicKey;
+pub use keccak_hash::H256 as Hash;
 
 /// Seed type for sodiumoxide-based implementation.
-pub use secpk256k1::ed25519::Seed;
 
-/// State for multi-part (streaming) computation of signature for sodiumoxide-based
-/// implementation.
-pub use secpk256k1::ed25519::State as SignState;
+use self::secp256k1::{Secp256k1, Signature, Message, SecretKey, PublicKey};
 
-/// Contains the state for multi-part (streaming) hash computations
-/// for sodiumoxide-based implementation.
-pub use secpk256k1::sha256::State as HashState;
-
-use self::secp256k1::{Secp256k1, Message, SecretKey, PublicKey};
-
-pub mod x25519;
+pub struct Seed([u8; 64])
 
 /// Number of bytes in a `Hash`.
-pub const HASH_SIZE: usize = sha256::DIGESTBYTES;
+pub const HASH_SIZE: usize = 32;
 
 /// Number of bytes in a public key.
-pub const PUBLIC_KEY_LENGTH: usize = ed25519::PUBLICKEYBYTES;
+pub const PUBLIC_KEY_LENGTH: usize = 65;
 
 /// Number of bytes in a secret key.
-pub const SECRET_KEY_LENGTH: usize = ed25519::SECRETKEYBYTES;
-
-/// Number of bytes in a seed.
-pub const SEED_LENGTH: usize = ed25519::SEEDBYTES;
+pub const SECRET_KEY_LENGTH: usize = 32;
 
 /// Number of bytes in a signature.
-pub const SIGNATURE_LENGTH: usize = ed25519::SIGNATUREBYTES;
+pub const SIGNATURE_LENGTH: usize = 64;
 
 /// Hash of an empty slice.
 pub const EMPTY_SLICE_HASH: Hash = Hash([
@@ -88,32 +67,36 @@ pub fn init() -> bool {
 /// Signs a slice of bytes using the signer's secret key and returns the
 /// resulting `Signature`.
 pub fn sign(data: &[u8], secret_key: &SecretKey) -> Signature {
-    let context = Secp256k1::signing_only()
-    message = Message::from_slice(data)
-    context.sign(Message::from_slice(data), secret_key)
-
-
-    ed25519::sign_detached(data, secret_key)
+    let context = Secp256k1::signing_only();
+    let message = Message::from_slice(data).unwrap();
+    context.sign(message, secret_key)
 }
 
 /// Computes a secret key and a corresponding public key from a `Seed`.
 pub fn gen_keypair_from_seed(seed: &Seed) -> (PublicKey, SecretKey) {
-    ed25519::keypair_from_seed(seed)
+    gen_keypair()
 }
 
 /// Generates a secret key and a corresponding public key using a cryptographically secure
 /// pseudo-random number generator.
 pub fn gen_keypair() -> (PublicKey, SecretKey) {
-    ed25519::gen_keypair()
+    let context = Secp256k1::new();
+    let mut rng = OsRng::new().unwrap();
+    let (secret_key, public_key) = context.generate_keypair(&mut rng);
+    (public_key, secret_key)
 }
 
 /// Verifies that `data` is signed with a secret key corresponding to the
 /// given public key.
 pub fn verify(sig: &Signature, data: &[u8], pub_key: &PublicKey) -> bool {
-    ed25519::verify_detached(sig, data, pub_key)
+    let context = Secp256k1::new();
+    let message = Message.from_slice(data).unwrap();
+    context.verify(&message, sig, pub_key).is_ok()
 }
 
 /// Calculates hash of a bytes slice.
 pub fn hash(data: &[u8]) -> Hash {
-    sha256::hash(data)
+    let mut output = &[];
+    keccak_hash::keccak_256(data, &mut output);
+    H256::from_slice(output)
 }

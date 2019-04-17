@@ -23,13 +23,13 @@
 #[macro_use]
 extern crate serde_derive;
 
+#[cfg(feature = "secp256k1-crypto")]
+#[doc(inline)]
+pub use self::crypto_impl::FromSlice;
 #[doc(inline)]
 pub use self::crypto_impl::{
     HASH_SIZE, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SEED_LENGTH, SIGNATURE_LENGTH,
 };
-#[cfg(feature = "secp256k1-crypto")]
-#[doc(inline)]
-pub use self::crypto_impl::FromSlice;
 #[cfg(feature = "sodiumoxide-crypto")]
 pub use self::crypto_lib::sodiumoxide::x25519;
 pub use self::utils::{generate_keys_file, read_keys_from_file};
@@ -53,10 +53,10 @@ use std::{
 use hex::{encode as encode_hex, FromHex, FromHexError, ToHex};
 
 // A way to set an active cryptographic backend is to export it as `crypto_impl`.
-#[cfg(feature = "sodiumoxide-crypto")]
-use self::crypto_lib::sodiumoxide as crypto_impl;
 #[cfg(feature = "secp256k1-crypto")]
 use self::crypto_lib::secp256k1 as crypto_impl;
+#[cfg(feature = "sodiumoxide-crypto")]
+use self::crypto_lib::sodiumoxide as crypto_impl;
 
 #[macro_use]
 mod macros;

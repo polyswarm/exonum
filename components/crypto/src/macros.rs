@@ -274,6 +274,5 @@ macro_rules! implement_index_traits {
                 self.0.index(_index)
             }
         }
-
     };
 }

@@ -27,7 +27,7 @@ use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 pub use keccak_hash::H256;
 
 /// Seed type for sepc256k1 implementation.
-pub use secp256k1::{Secp256k1, Signature, Message, SecretKey, PublicKey, FromSlice};
+pub use secp256k1::{FromSlice, Message, PublicKey, Secp256k1, SecretKey, Signature};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Hash(pub H256);
@@ -138,7 +138,7 @@ pub fn gen_keypair() -> (PublicKey, SecretKey) {
 /// Verifies that `data` is signed with a secret key corresponding to the
 /// given public key.
 pub fn verify(sig: &Signature, data: &[u8], pub_key: &PublicKey) -> bool {
-    let context = Secp256k1::new( );
+    let context = Secp256k1::new();
     let message = Message::from_slice(data).unwrap();
     context.verify(&message, sig, pub_key).is_ok()
 }
@@ -154,7 +154,6 @@ pub fn hash(data: &[u8]) -> Hash {
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     #[test]
     fn empty_hash() {

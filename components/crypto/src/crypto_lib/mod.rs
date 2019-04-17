@@ -15,7 +15,7 @@
 //! This module contains implementations of cryptographic
 //! primitives for different cryptographic backends.
 
-#[cfg(feature = "sodiumoxide-crypto")]
-pub mod sodiumoxide;
 #[cfg(feature = "secp256k1-crypto")]
 pub mod secp256k1;
+#[cfg(feature = "sodiumoxide-crypto")]
+pub mod sodiumoxide;

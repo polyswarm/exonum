@@ -80,6 +80,23 @@ secp256k1::impl_array_newtype!(Seed, u8, SEED_LENGTH);
 secp256k1::impl_pretty_debug!(Seed);
 secp256k1::impl_from_slice!(Seed; SEED_LENGTH);
 
+#[derive(Default, Debug)]
+pub struct HashState(pub Vec<u8>);
+
+impl HashState {
+    pub fn init() -> Self {
+        HashState(Vec::new())
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        self.0.extend_from_slice(data);
+    }
+
+    pub fn finalize(self) -> Hash {
+        hash(&self.0[..])
+    }
+}
+
 /// Number of bytes in a `Hash`.
 pub const HASH_SIZE: usize = secp256k1::constants::MESSAGE_SIZE;
 

@@ -233,10 +233,8 @@ pub fn init() {
 /// let _ = hash_stream.hash();
 /// ```
 #[derive(Debug, Default)]
-#[cfg(feature = "sodiumoxide-crypto")]
 pub struct HashStream(crypto_impl::HashState);
 
-#[cfg(feature = "sodiumoxide-crypto")]
 impl HashStream {
     /// Creates a new instance of `HashStream`.
     pub fn new() -> Self {
@@ -282,8 +280,8 @@ impl HashStream {
 /// let file_sign = create_stream.sign(&secret_key);
 /// assert!(verify_stream.verify(&file_sign, &public_key));
 /// ```
-#[derive(Debug, Default)]
 #[cfg(feature = "sodiumoxide-crypto")]
+#[derive(Debug, Default)]
 pub struct SignStream(crypto_impl::SignState);
 
 #[cfg(feature = "sodiumoxide-crypto")]

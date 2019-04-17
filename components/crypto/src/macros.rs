@@ -29,13 +29,28 @@ macro_rules! implement_public_crypto_wrapper {
 
     impl $name {
         /// Creates a new instance from bytes array.
+        #[cfg(feature = "sodiumoxide-crypto")]
         pub fn new(bytes_array: [u8; $size]) -> Self {
             $name($crate::crypto_impl::$name(bytes_array))
         }
 
+        /// Creates a new instance from bytes array.
+        #[cfg(feature = "secp256k1-crypto")]
+        pub fn new(bytes_array: [u8; $size]) -> Self {
+            // TODO Unwrap should not be used
+            $name($crate::crypto_impl::$name::from_slice(&bytes_array[..]).unwrap())
+        }
+
         /// Creates a new instance from bytes slice.
+        #[cfg(feature = "sodiumoxide-crypto")]
         pub fn from_slice(bytes_slice: &[u8]) -> Option<Self> {
             $crate::crypto_impl::$name::from_slice(bytes_slice).map($name)
+        }
+
+        /// Creates a new instance from bytes slice.
+        #[cfg(feature = "secp256k1-crypto")]
+        pub fn from_slice(bytes_slice: &[u8]) -> Option<Self> {
+            $crate::crypto_impl::$name::from_slice(bytes_slice).ok().map($name)
         }
 
         /// Returns a hex representation of binary data.
@@ -83,13 +98,28 @@ macro_rules! implement_private_crypto_wrapper {
 
     impl $name {
         /// Creates a new instance from bytes array.
+        #[cfg(feature = "sodiumoxide-crypto")]
         pub fn new(bytes_array: [u8; $size]) -> Self {
             $name($crate::crypto_impl::$name(bytes_array))
         }
 
+        /// Creates a new instance from bytes array.
+        #[cfg(feature = "secp256k1-crypto")]
+        pub fn new(bytes_array: [u8; $size]) -> Self {
+            // TODO Unwrap should not be used
+            $name($crate::crypto_impl::$name::from_slice(&bytes_array[..]).unwrap())
+        }
+
         /// Creates a new instance from bytes slice.
+        #[cfg(feature = "sodiumoxide-crypto")]
         pub fn from_slice(bytes_slice: &[u8]) -> Option<Self> {
             $crate::crypto_impl::$name::from_slice(bytes_slice).map($name)
+        }
+
+        /// Creates a new instance from bytes slice.
+        #[cfg(feature = "secp256k1-crypto")]
+        pub fn from_slice(bytes_slice: &[u8]) -> Option<Self> {
+            $crate::crypto_impl::$name::from_slice(bytes_slice).ok().map($name)
         }
 
         /// Returns a hex representation of binary data.
@@ -108,6 +138,7 @@ macro_rules! implement_private_crypto_wrapper {
         }
     }
 
+    #[cfg(feature = "sodiumoxide-crypto")]
     impl ToHex for $name {
         fn write_hex<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
             (self.0).0.as_ref().write_hex(w)
@@ -115,6 +146,17 @@ macro_rules! implement_private_crypto_wrapper {
 
         fn write_hex_upper<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
             (self.0).0.as_ref().write_hex_upper(w)
+        }
+    }
+
+    #[cfg(feature = "secp256k1-crypto")]
+    impl ToHex for $name {
+        fn write_hex<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
+            self.0.as_ref().write_hex(w)
+        }
+
+        fn write_hex_upper<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
+            self.0.as_ref().write_hex_upper(w)
         }
     }
     )
@@ -172,6 +214,7 @@ macro_rules! implement_serde {
 
 macro_rules! implement_index_traits {
     ($new_type:ident) => {
+        #[cfg(feature = "sodiumoxide-crypto")]
         impl Index<Range<usize>> for $new_type {
             type Output = [u8];
             fn index(&self, _index: Range<usize>) -> &[u8] {
@@ -179,6 +222,7 @@ macro_rules! implement_index_traits {
                 inner.0.index(_index)
             }
         }
+        #[cfg(feature = "sodiumoxide-crypto")]
         impl Index<RangeTo<usize>> for $new_type {
             type Output = [u8];
             fn index(&self, _index: RangeTo<usize>) -> &[u8] {
@@ -186,6 +230,7 @@ macro_rules! implement_index_traits {
                 inner.0.index(_index)
             }
         }
+        #[cfg(feature = "sodiumoxide-crypto")]
         impl Index<RangeFrom<usize>> for $new_type {
             type Output = [u8];
             fn index(&self, _index: RangeFrom<usize>) -> &[u8] {
@@ -193,6 +238,7 @@ macro_rules! implement_index_traits {
                 inner.0.index(_index)
             }
         }
+        #[cfg(feature = "sodiumoxide-crypto")]
         impl Index<RangeFull> for $new_type {
             type Output = [u8];
             fn index(&self, _index: RangeFull) -> &[u8] {
@@ -200,5 +246,34 @@ macro_rules! implement_index_traits {
                 inner.0.index(_index)
             }
         }
+        #[cfg(feature = "secp256k1-crypto")]
+        impl Index<Range<usize>> for $new_type {
+            type Output = [u8];
+            fn index(&self, _index: Range<usize>) -> &[u8] {
+                self.0.index(_index)
+            }
+        }
+        #[cfg(feature = "secp256k1-crypto")]
+        impl Index<RangeTo<usize>> for $new_type {
+            type Output = [u8];
+            fn index(&self, _index: RangeTo<usize>) -> &[u8] {
+                self.0.index(_index)
+            }
+        }
+        #[cfg(feature = "secp256k1-crypto")]
+        impl Index<RangeFrom<usize>> for $new_type {
+            type Output = [u8];
+            fn index(&self, _index: RangeFrom<usize>) -> &[u8] {
+                self.0.index(_index)
+            }
+        }
+        #[cfg(feature = "secp256k1-crypto")]
+        impl Index<RangeFull> for $new_type {
+            type Output = [u8];
+            fn index(&self, _index: RangeFull) -> &[u8] {
+                self.0.index(_index)
+            }
+        }
+
     };
 }

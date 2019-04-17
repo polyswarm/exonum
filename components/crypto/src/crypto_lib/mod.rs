@@ -17,3 +17,5 @@
 
 #[cfg(feature = "sodiumoxide-crypto")]
 pub mod sodiumoxide;
+#[cfg(feature = "secp256k1-crypto")]
+pub mod secp256k1;

@@ -27,6 +27,9 @@ extern crate serde_derive;
 pub use self::crypto_impl::{
     HASH_SIZE, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SEED_LENGTH, SIGNATURE_LENGTH,
 };
+#[cfg(feature = "secp256k1-crypto")]
+#[doc(inline)]
+pub use self::crypto_impl::FromSlice;
 #[cfg(feature = "sodiumoxide-crypto")]
 pub use self::crypto_lib::sodiumoxide::x25519;
 pub use self::utils::{generate_keys_file, read_keys_from_file};
@@ -52,6 +55,8 @@ use hex::{encode as encode_hex, FromHex, FromHexError, ToHex};
 // A way to set an active cryptographic backend is to export it as `crypto_impl`.
 #[cfg(feature = "sodiumoxide-crypto")]
 use self::crypto_lib::sodiumoxide as crypto_impl;
+#[cfg(feature = "secp256k1-crypto")]
+use self::crypto_lib::secp256k1 as crypto_impl;
 
 #[macro_use]
 mod macros;
@@ -228,8 +233,10 @@ pub fn init() {
 /// let _ = hash_stream.hash();
 /// ```
 #[derive(Debug, Default)]
+#[cfg(feature = "sodiumoxide-crypto")]
 pub struct HashStream(crypto_impl::HashState);
 
+#[cfg(feature = "sodiumoxide-crypto")]
 impl HashStream {
     /// Creates a new instance of `HashStream`.
     pub fn new() -> Self {
@@ -276,8 +283,10 @@ impl HashStream {
 /// assert!(verify_stream.verify(&file_sign, &public_key));
 /// ```
 #[derive(Debug, Default)]
+#[cfg(feature = "sodiumoxide-crypto")]
 pub struct SignStream(crypto_impl::SignState);
 
+#[cfg(feature = "sodiumoxide-crypto")]
 impl SignStream {
     /// Creates a new instance of `SignStream`.
     ///
